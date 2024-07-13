@@ -1,0 +1,120 @@
+package com.linkshortener.model;
+
+public class URL {
+    private String longUrl;
+    private String shortUrl;
+
+    public URL(String longUrl, String shortUrl) {
+        this.longUrl = longUrl;
+        this.shortUrl = shortUrl;
+    }
+
+    // Getters and setters
+    public String getLongUrl() {
+        return longUrl;
+    }
+
+    public void setLongUrl(String longUrl) {
+        this.longUrl = longUrl;
+    }
+
+    public String getShortUrl() {
+        return shortUrl;
+    }
+
+    public void setShortUrl(String shortUrl) {
+        this.shortUrl = shortUrl;
+    }
+}
+package com.linkshortener.util;
+
+import java.util.Base64;
+
+public class URLShortener {
+    public static String encode(String longUrl) {
+        return Base64.getUrlEncoder().encodeToString(longUrl.getBytes());
+    }
+
+    public static String decode(String shortUrl) {
+        return new String(Base64.getUrlDecoder().decode(shortUrl));
+    }
+}
+package com.linkshortener.service;
+
+import com.linkshortener.model.URL;
+import com.linkshortener.util.URLShortener;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class URLService {
+    private Map<String, String> urlDatabase = new HashMap<>();
+
+    public String shortenURL(String longUrl) {
+        if (urlDatabase.containsValue(longUrl)) {
+            return getKeyByValue(urlDatabase, longUrl);
+        }
+        String shortUrl = URLShortener.encode(longUrl);
+        urlDatabase.put(shortUrl, longUrl);
+        return shortUrl;
+    }
+
+    public String getLongURL(String shortUrl) {
+        return urlDatabase.get(shortUrl);
+    }
+
+    private String getKeyByValue(Map<String, String> map, String value) {
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            if (value.equals(entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+}
+package com.linkshortener;
+
+import com.linkshortener.service.URLService;
+
+import java.util.Scanner;
+
+public class App {
+    public static void main(String[] args) {
+        URLService urlService = new URLService();
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("1. Shorten URL");
+            System.out.println("2. Expand URL");
+            System.out.println("3. Exit");
+            System.out.print("Choose an option: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();  // Consume newline
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter the long URL: ");
+                    String longUrl = scanner.nextLine();
+                    String shortUrl = urlService.shortenURL(longUrl);
+                    System.out.println("Shortened URL: " + shortUrl);
+                    break;
+                case 2:
+                    System.out.print("Enter the short URL: ");
+                    shortUrl = scanner.nextLine();
+                    longUrl = urlService.getLongURL(shortUrl);
+                    if (longUrl != null) {
+                        System.out.println("Original URL: " + longUrl);
+                    } else {
+                        System.out.println("URL not found.");
+                    }
+                    break;
+                case 3:
+                    System.exit(0);
+                    break;
+                default:
+                    System.out.println("Invalid choice.");
+                    break;
+            }
+        }
+    }
+}
